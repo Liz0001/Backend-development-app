@@ -8,7 +8,8 @@ In this lab, we'll apply all the obtained knowledge from the previous labs and c
 - Lab 3 Create JWT for the backend 
 - Lab 4 Access Control & Middleware 
 
+
 ## The purpose of this lab is the following:
-● Understand Basic Access Control
-● Understand how to verify jwt
-● Understand middleware functionss
+- Understand Basic Access Control
+- Understand how to verify jwt
+- Understand middleware functionss
