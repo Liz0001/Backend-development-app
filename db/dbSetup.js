@@ -19,7 +19,7 @@ function setupDB() {
 
     db.run(`
       CREATE TABLE IF NOT EXISTS users (
-        userID    TEXT PRIMARY KEY NOT NULL,
+        userID    TEXT PRIMARY KEY NOT NULL UNIQUE,
         name      TEXT NOT NULL,
         role      TEXT NOT NULL,
         password  TEXT NOT NULL
