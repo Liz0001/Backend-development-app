@@ -1,41 +1,53 @@
-<div style="width: 500px; margin: 0 auto; text-align:center">
-  <header>
-    <h1>MyApp</h1>
-    <br>
-    <hr>
-  </header>
+<html>
 
-  <main>
-    <h2>CREATE ACCOUNT</h2>
+<head>
+  <title>Register Page</title>
+</head>
 
-    <form action="/register" method="POST">
-      <div>
-        <!-- <label for="username">Username</label> -->
-        <input type="text" id="username" name="username" required placeholder="Username">
-      </div>
+<body>
+
+  <div style="width: 500px; margin: 0 auto; text-align:center">
+    <header>
+      <h1>MyApp</h1>
       <br>
-      <div>
-        <!-- <label for="password">Password</label> -->
-        <input type="text" id="password1" name="password1" required placeholder="Password">
-      </div>
+      <hr>
+    </header>
+
+    <main>
+      <h2>CREATE ACCOUNT</h2>
+
+      <form action="/register" method="POST">
+        <div>
+          <!-- <label for="username">Username</label> -->
+          <input type="text" id="username" name="username" required placeholder="Username">
+        </div>
+        <br>
+        <div>
+          <!-- <label for="password">Password</label> -->
+          <input type="text" id="password1" name="password1" required placeholder="Password">
+        </div>
+        <br>
+        <div>
+          <!-- <label for="password2">Repeat Password</label> -->
+          <input type="text" id="password2" name="password2" required placeholder="Repeat Password">
+        </div>
+        <br>
+
+        <button type="submit"> Create Account </button>
+      </form>
+
+
       <br>
+      <hr>
       <div>
-        <!-- <label for="password2">Repeat Password</label> -->
-        <input type="text" id="password2" name="password2" required placeholder="Repeat Password">
+        <p>Already have an account? <a href="/identify">Log In</a></p>
       </div>
-      <br>
-
-      <button type="submit"> Create Account </button>
-    </form>
 
 
-    <br>
-    <hr>
-    <div>
-      <p>Already have an account? <a href="/identify">Log In</a></p>
-    </div>
+    </main>
 
+  </div>
 
-  </main>
+</body>
 
-</div>
+</html>

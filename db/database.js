@@ -1,7 +1,7 @@
 const sqlite3 = require("sqlite3").verbose()
-const path = require("path")
-const file = "../db/users-database.db"
-const db = new sqlite3.Database(path.resolve(__dirname, file))
+const file = "./db/users-database.db"
+const db = new sqlite3.Database(file)
+
 
 
 function getAllUsers() {
@@ -15,13 +15,12 @@ function getAllUsers() {
 }
 
 
-
-async function data() {
-  console.log(await getAllUsers())
+// just to see the contents of database
+async function checkDatabase() {
   let uuu = await getAllUsers()
-  console.log(uuu.length)
+  console.log(await uuu)
+  console.log("Nr of users in database:", uuu.length)
 }
 
 
-
-data()
+module.exports = { checkDatabase, getAllUsers }

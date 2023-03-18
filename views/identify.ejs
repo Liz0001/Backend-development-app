@@ -1,37 +1,49 @@
-<div style="width: 500px; margin: 0 auto; text-align:center">
+<html>
 
-  <header>
-    <h1>MyApp</h1>
-    <br>
-    <hr>
-  </header>
+<head>
+  <title>Login Page</title>
+</head>
 
-  <main>
-    <h2>LOGIN</h2>
+<body>
 
-    <form action="/identify" method="POST">
-      <div>
-        <!-- <label for="encrypt">Username</label> -->
-        <input type="text" id="username" name="username" required placeholder="Username">
-      </div>
+  <div style="width: 500px; margin: 0 auto; text-align:center">
+
+    <header>
+      <h1>MyApp</h1>
       <br>
-      <div>
-        <!-- <label for="password">Password</label> -->
-        <input type="text" id="password" name="password" required placeholder="Password">
-      </div>
+      <hr>
+    </header>
+
+    <main>
+      <h2>LOGIN</h2>
+
+      <form action="/identify" method="POST">
+        <div>
+          <!-- <label for="encrypt">Username</label> -->
+          <input type="text" id="username" name="username" required placeholder="Username">
+        </div>
+        <br>
+        <div>
+          <!-- <label for="password">Password</label> -->
+          <input type="text" id="password" name="password" required placeholder="Password">
+        </div>
+        <br>
+
+        <button type="submit"> Login </button>
+      </form>
+
+
       <br>
+      <hr>
 
-      <button type="submit"> Login </button>
-    </form>
-
-
-    <br>
-    <hr>
-    <!-- 
-    <div>
-      <p>Don't have an account? <a href="/register">Create Account</a></p>
-    </div> -->
+      <div>
+        <p>Don't have an account? <a href="/register">Create Account</a></p>
+      </div>
 
 
-  </main>
-</div>
+    </main>
+  </div>
+
+</body>
+
+</html>
