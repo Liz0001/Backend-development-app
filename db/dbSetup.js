@@ -5,11 +5,23 @@ const file = "./db/users-database.db"
 const db = new sqlite3.Database(file)
 
 
+
 let seedData = [
-  { userID: "id1", name: "user1", role: "student", password: "password" },
-  { userID: "id2", name: "user2", role: "student", password: "password2" },
-  { userID: "id3", name: "user3", role: "teacher", password: "password3" },
-  { userID: "admin", name: "admin", role: "admin", password: "admin" }
+  {
+    userID: "id1", name: "user1", role: "student1", password:
+      "$2b$10$.UW1KbuNQVUX6SJQPms2GOKViw948pFO//i0sMU9Fomt6g8YyeiBG"
+  },
+  {
+    userID: "id2", name: "user2", role: "student2", password:
+      "$2b$10$7gDqgnie7kztkCyszEGqDuDBtiQrk5GF8GkKEosczgiTeLGpZc5m."
+  },
+  {
+    userID: "id3", name: "user3", role: "teacher", password:
+      "$2b$10$PZltbt/uqVQnLPWGVLbHRe/EgRgzlAhoTFtwSRIV1c5yxLBS4kDpK"
+  },
+  {
+    userID: "admin", name: "admin", role: "admin", password: "$2b$10$qIkhD7VqfWpdhqF6uuXhLexOJC2kVd0OBzbWPS82CwkOFn3cpXW3O"
+  }
 ]
 
 
@@ -45,4 +57,3 @@ function setupDB() {
 
 
 module.exports = { setupDB }
-
