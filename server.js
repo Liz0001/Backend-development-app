@@ -1,11 +1,12 @@
 ///////////////////////////////////
 // server setup etc
 const { setupDB } = require("./db/dbSetup.js")
-const { checkDatabase, getAllUsers } = require("./db/database.js")
+const { checkDatabase, getAllUsers, userExists, createUser, generateId } = require("./db/database.js")
 
+const jwt = require("jsonwebtoken")
+const bcrypt = require("bcrypt")
 const express = require("express")
 const app = express()
-const jwt = require("jsonwebtoken")
 
 // .env file access for token
 require("dotenv").config()
@@ -23,7 +24,7 @@ app.use((req, res, next) => {
   next()
 })
 
-// body-parser and/or cookie-parser??
+// body-parser and/or cookie-parser?? ...
 // app.use(cookieParser());
 
 let currentKey = ""
@@ -48,28 +49,13 @@ app.get("/register", (req, res) => {
   res.render("register.ejs")
 })
 
-// admin
-app.get("/admin", async (req, res) => {
 
-  let users = await getAllUsers()
-  // console.log(users)
-  res.render("admin.ejs", {
-    users: users
-  })
-})
 
 // app.use("/student1", authenticateUser, authorizeStudent, studentRoute1)
 // app.use("/student2", authenticateUser, authorizeStudent, studentRoute2)
 // app.use("/teacher", authenticateUser, authorizeTeacher, teacherRoute)
 // app.use("/admin", authenticateUser, authorizeAdmin, adminRoute)
 
-// app.use("/student1", studentRoute1)
-// app.use("/student2", studentRoute2)
-// app.use("/teacher", teacherRoute)
-
-
-// app.use("/identify", identifyRoute)
-// app.use("/granted", grantedRoute)
 
 
 app.post("/identify", (req, res) => {
@@ -87,12 +73,95 @@ app.get("/granted", authenticateToken, (req, res) => {
 
 
 
+app.get("/student1", (req, res) => {
+  res.render("student1.ejs")
+})
+
+app.get("/student2", (req, res) => {
+  res.render("student2.ejs")
+})
+
+app.get("/teacher", (req, res) => {
+  res.render("teacher.ejs")
+})
+
+app.get("/admin", async (req, res) => {
+  let users = await getAllUsers()
+  res.render("admin.ejs", {
+    users: users
+  })
+})
 
 
 
 
 
 
+///////////////////////////////////
+///////////////////////////////////
+// POST METHODS
+app.post("/register", async (req, res) => {
+
+  const { name, role, password } = req.body
+  let userInDB = await userExists(name, role)
+  let id = await generateId()
+  console.log("userInDB", userInDB)
+  if (!userInDB && password != " ") {
+    try {
+      const encryptedPwd = await bcrypt.hash(password, 10)
+      await createUser(id, name, role, encryptedPwd)
+      console.log("Yeei")
+    }
+    catch {
+      console.log("Here")
+      req.method = "GET"
+      res.redirect("/register")
+      return
+    }
+
+  } else {
+    req.method = "GET"
+    res.redirect("/register")
+    return
+  }
+  req.method = "GET"
+  res.redirect("/identify")
+})
+
+
+// TODO:  login
+app.post("/identify", async (req, res) => {
+  const username = req.body.username
+  const pass = req.body.password
+  let userInDB = await isUserInDatabase(username)
+
+  if (userInDB && pass != ' ') {
+    let dbEncryption = await getPwd(username)
+
+    if (await bcrypt.compare(pass, dbEncryption)) {
+
+      const user = { user: username }
+      const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
+
+      console.log("Token:", accessToken)
+      // res.json({ accessToken: accessToken })
+
+      req.method = "GET"
+      res.redirect(`/start/${username}`)
+      return
+
+    } else {
+
+      res.status(401).render("fail.ejs")
+      return
+    }
+  }
+
+  res.status(401).render("fail.ejs")
+})
+
+
+///////////////////////////////////
 ///////////////////////////////////
 // Server listening
 app.listen(process.env.PORT, async () => {
@@ -103,10 +172,9 @@ app.listen(process.env.PORT, async () => {
 
 
 
-
-
 ///////////////////////////////////
-// functions
+///////////////////////////////////
+// functions and other
 function authenticateToken(req, res, next) {
 
   if (currentKey == "")
@@ -115,5 +183,5 @@ function authenticateToken(req, res, next) {
     next()
   else
     res.redirect("/identify")
-
 }
+

@@ -19,17 +19,20 @@
       <form action="/register" method="POST">
         <div>
           <!-- <label for="username">Username</label> -->
-          <input type="text" id="username" name="username" required placeholder="Username">
+          <input type="text" id="name" name="name" required placeholder="Name">
+        </div>
+        <br>
+
+        <div>
+          <input type="text" id="password" name="password" required placeholder="Password">
         </div>
         <br>
         <div>
-          <!-- <label for="password">Password</label> -->
-          <input type="text" id="password1" name="password1" required placeholder="Password">
-        </div>
-        <br>
-        <div>
-          <!-- <label for="password2">Repeat Password</label> -->
-          <input type="text" id="password2" name="password2" required placeholder="Repeat Password">
+          <select type="text" id="role" name="role" required style="width: 168px;">
+            <option value="" disabled selected> Choose a Role </option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+          </select>
         </div>
         <br>
 
