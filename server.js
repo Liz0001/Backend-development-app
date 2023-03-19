@@ -57,33 +57,34 @@ app.get("/start", authorizeToken, (req, res) => {
 })
 
 
-app.get("/student1", authorizeToken, authorizeRole(["student1"]), async (req, res) => {
+app.get("/student1", authorizeToken, authorizeRole(["student1", "teacher", "admin"]), async (req, res) => {
   // const user = await getUserFromToken(req)
   res.render("student1.ejs")
   // , { user: user })
 })
 
-app.get("/student2", authorizeToken, authorizeRole(["student2"]), async (req, res) => {
+app.get("/student2", authorizeToken, authorizeRole(["student2", "teacher", "admin"]), async (req, res) => {
   const user = await getUserFromToken(req)
   res.render("student2.ejs")
   // , { user: user })
 })
 
-app.get("/teacher", authorizeToken, authorizeRole(["teacher"]), async (req, res) => {
+app.get("/teacher", authorizeToken, authorizeRole(["teacher", "admin"]), async (req, res) => {
   // const students = await getAllStudents()
   res.render("teacher.ejs")
   // , students)
 })
+
+app.get("/student", authorizeToken, authorizeRole(["student", "teacher", "admin"]), async (req, res) => {
+  res.render("student.ejs")
+})
+
 
 app.get("/admin", authorizeToken, authorizeRole(["admin"]), async (req, res) => {
   const users = await getAllUsers()
   res.render("admin.ejs", { users: users })
 })
 
-
-app.get("/student", authorizeToken, authorizeRole(["student"]), async (req, res) => {
-  res.render("student.ejs")
-})
 
 
 app.get("/users/:userID", authorizeToken, async (req, res) => {
@@ -198,6 +199,21 @@ app.post("/identify", async (req, res) => {
 })
 
 
+///////////////////////////////////
+// logout and all other routes
+
+app.get("/logout", (req, res) => {
+  res.clearCookie("jwt")
+  res.redirect("/identify")
+})
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("jwt");
+  req.method = "GET"
+  res.redirect("/identify");
+});
+
+
 app.all("*", (req, res) => { res.status(404).render("error.ejs") })
 
 
@@ -252,8 +268,6 @@ function authorizeToken(req, res, next) {
   try {
     const decodedToken = jwt.verify(token, process.env.TOKEN_KEY);
     req.user = decodedToken;
-    // console.log("req.user", req.user)
-    // console.log("AUTHORIZING TOKEN")
     next();
   } catch (error) {
     console.log(error);
