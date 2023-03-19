@@ -4,6 +4,7 @@ const db = new sqlite3.Database(file)
 let nextId = generateId()
 
 
+// for admin to see users in database
 function getAllUsers() {
   return new Promise((resolve, reject) => {
     const sql = `SELECT * FROM users`
@@ -14,19 +15,32 @@ function getAllUsers() {
   })
 }
 
-
-async function userExists(user, role) {
-  const sql = `SELECT * FROM users WHERE name=? AND role=?`
+// for login and for create account
+async function userExists(user) {
+  const sql = `SELECT * FROM users WHERE name=?`
 
   return new Promise((resolve, reject) => {
-    db.all(sql, [user, role], (error, result) => {
+    db.all(sql, [user], (error, result) => {
       if (error) reject(error)
       else resolve(result.length > 0)
     })
   })
 }
 
+// for login, get the user
+async function getUser(user) {
+  const sql = `SELECT * FROM users WHERE name=?`
 
+  return new Promise((resolve, reject) => {
+    db.all(sql, [user], (error, result) => {
+      if (error) reject(error)
+      else resolve(result)
+    })
+  })
+}
+
+
+// create the new user
 async function createUser(id, user, role, pass) {
   console.log(id, user, role, pass)
   return new Promise((resolve, reject) => {
@@ -42,19 +56,12 @@ async function createUser(id, user, role, pass) {
   })
 }
 
-
+// generate id for new user
 async function generateId() {
   let nr = await getAllUsers()
   let id = await nr.length
   return "id" + id
 }
 
-// just to see the users in db
-async function checkDatabase() {
-  let uuu = await getAllUsers()
-  console.log(await uuu)
-  console.log("Nr of users in database:", uuu.length)
-}
 
-
-module.exports = { checkDatabase, getAllUsers, userExists, createUser, generateId }
+module.exports = { getAllUsers, userExists, createUser, generateId, getUser }

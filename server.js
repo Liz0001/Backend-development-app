@@ -1,11 +1,17 @@
 ///////////////////////////////////
+///////////////////////////////////
 // server setup etc
-const { setupDB } = require("./db/dbSetup.js")
-const { checkDatabase, getAllUsers, userExists, createUser, generateId } = require("./db/database.js")
+const { databaseSetup } = require("./db/dbSetup.js")
+const { getAllUsers,
+  userExists,
+  createUser,
+  generateId,
+  getUser } = require("./db/database.js")
 
-const jwt = require("jsonwebtoken")
-const bcrypt = require("bcrypt")
+const cookieParser = require("cookie-parser")
 const express = require("express")
+const bcrypt = require("bcrypt")
+const jwt = require("jsonwebtoken")
 const app = express()
 
 // .env file access for token
@@ -16,6 +22,7 @@ app.set("view-engine", "ejs")
 
 ///////////////////////////////////
 // middleware
+app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
@@ -23,12 +30,6 @@ app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`, req.body)
   next()
 })
-
-// body-parser and/or cookie-parser?? ...
-// app.use(cookieParser());
-
-let currentKey = ""
-let currentPassword = ""
 
 
 ///////////////////////////////////
@@ -50,49 +51,72 @@ app.get("/register", (req, res) => {
 })
 
 
-
-// app.use("/student1", authenticateUser, authorizeStudent, studentRoute1)
-// app.use("/student2", authenticateUser, authorizeStudent, studentRoute2)
-// app.use("/teacher", authenticateUser, authorizeTeacher, teacherRoute)
-// app.use("/admin", authenticateUser, authorizeAdmin, adminRoute)
-
-
-
-app.post("/identify", (req, res) => {
-  const username = req.body.password
-  const token = jwt.sign(username, process.env.SECRET_ACESS_TOKEN)
-  currentKey = token
-  currentPassword = username
-  res.redirect("/granted")
-})
-
-app.get("/granted", authenticateToken, (req, res) => {
+///////////////////////////////////
+app.get("/start", authorizeToken, (req, res) => {
   res.render("start.ejs")
 })
 
 
-
-
-app.get("/student1", (req, res) => {
+app.get("/student1", authorizeToken, authorizeRole(["student1"]), async (req, res) => {
+  // const user = await getUserFromToken(req)
   res.render("student1.ejs")
+  // , { user: user })
 })
 
-app.get("/student2", (req, res) => {
+app.get("/student2", authorizeToken, authorizeRole(["student2"]), async (req, res) => {
+  const user = await getUserFromToken(req)
   res.render("student2.ejs")
+  // , { user: user })
 })
 
-app.get("/teacher", (req, res) => {
+app.get("/teacher", authorizeToken, authorizeRole(["teacher"]), async (req, res) => {
+  // const students = await getAllStudents()
   res.render("teacher.ejs")
+  // , students)
 })
 
-app.get("/admin", async (req, res) => {
-  let users = await getAllUsers()
-  res.render("admin.ejs", {
-    users: users
-  })
+app.get("/admin", authorizeToken, authorizeRole(["admin"]), async (req, res) => {
+  const users = await getAllUsers()
+  res.render("admin.ejs", { users: users })
 })
 
 
+app.get("/student", authorizeToken, authorizeRole(["student"]), async (req, res) => {
+  res.render("student.ejs")
+})
+
+
+app.get("/users/:userID", authorizeToken, async (req, res) => {
+  const token = req.cookies.jwt
+  const decryptedToken = jwt.verify(token, process.env.TOKEN_KEY)
+  let user = await getUser(decryptedToken.name)
+  user = user[0]
+  console.log("req.params.userID", req.params.userID)
+  console.log("decryptedToken.userID", decryptedToken.userID)
+
+  if (req.params.userID !== decryptedToken.userID) {
+    return res.sendStatus(401)
+  }
+
+  if (user.role === "student1") {
+    res.redirect("student1.ejs")
+    // , { user: user })
+  } else if (user.role === "student2") {
+    res.render("student2.ejs", { user: user })
+  } else if (user.role === "teacher") {
+    // TODO: function
+    // let students = await getAllStudents()
+    res.render("teacher.ejs")
+    // , students)
+
+  } else if (user.role === "student") {
+    res.render("student.ejs")
+  }
+  else if (user.role === "admin") {
+    res.redirect("/admin")
+  }
+
+})
 
 
 
@@ -100,26 +124,26 @@ app.get("/admin", async (req, res) => {
 ///////////////////////////////////
 ///////////////////////////////////
 // POST METHODS
+
+// register new user
 app.post("/register", async (req, res) => {
 
   const { name, role, password } = req.body
-  let userInDB = await userExists(name, role)
-  let id = await generateId()
-  console.log("userInDB", userInDB)
+  let userInDB = await userExists(name)
+
   if (!userInDB && password != " ") {
+    let id = await generateId()
     try {
       const encryptedPwd = await bcrypt.hash(password, 10)
       await createUser(id, name, role, encryptedPwd)
-      console.log("Yeei")
     }
     catch {
-      console.log("Here")
       req.method = "GET"
       res.redirect("/register")
       return
     }
-
-  } else {
+  }
+  else {
     req.method = "GET"
     res.redirect("/register")
     return
@@ -129,59 +153,111 @@ app.post("/register", async (req, res) => {
 })
 
 
-// TODO:  login
+// login user
 app.post("/identify", async (req, res) => {
-  const username = req.body.username
-  const pass = req.body.password
-  let userInDB = await isUserInDatabase(username)
 
-  if (userInDB && pass != ' ') {
-    let dbEncryption = await getPwd(username)
+  const { name, password } = req.body
+  let userInDB = await userExists(name)
 
-    if (await bcrypt.compare(pass, dbEncryption)) {
+  const encryptedPwd = await bcrypt.hash(password, 10)
+  console.log(encryptedPwd)
+  console.log(name, password, 'exist in db ', userInDB)
 
-      const user = { user: username }
-      const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
+  if (userInDB) {
+    let user = await getUser(name)
+    user = user[0]
+    console.log(await bcrypt.compare(password, user.password))
+    try {
+      if (await bcrypt.compare(password, user.password)) {
 
-      console.log("Token:", accessToken)
-      // res.json({ accessToken: accessToken })
+        const userIn = {
+          userID: user.userID,
+          name: user.name,
+          role: user.role
+        }
+        const token = jwt.sign(userIn, process.env.TOKEN_KEY)
+        res.cookie("jwt", token, { httpOnly: true, maxAge: 86400000 }).status(200)
 
-      req.method = "GET"
-      res.redirect(`/start/${username}`)
-      return
+        req.method = "GET"
+        res.redirect(`/users/${name}`)
 
-    } else {
+        return
 
+      } else {
+        res.status(401).render("fail.ejs")
+        return
+      }
+
+    } catch (error) {
+      console.log(error)
       res.status(401).render("fail.ejs")
       return
     }
   }
-
   res.status(401).render("fail.ejs")
 })
+
+
+app.all("*", (req, res) => { res.status(404).render("error.ejs") })
 
 
 ///////////////////////////////////
 ///////////////////////////////////
 // Server listening
 app.listen(process.env.PORT, async () => {
-  // setupDB()
-  // checkDatabase()
+  // databaseSetup()
   console.log("Server listening on PORT " + process.env.PORT)
 })
 
 
-
 ///////////////////////////////////
 ///////////////////////////////////
-// functions and other
-function authenticateToken(req, res, next) {
-
-  if (currentKey == "")
-    res.redirect("/identify")
-  else if (jwt.verify(currentKey, process.env.SECRET_ACESS_TOKEN))
-    next()
-  else
-    res.redirect("/identify")
+// Auth functions
+async function getUserFromToken(req) {
+  const token = req.cookies.jwt
+  const decryptedToken = jwt.verify(token, process.env.TOKEN_KEY)
+  let user = await getUser(decryptedToken.name)
+  user = user[0]
+  // console.log("getUserFromToken", user)
+  return user
 }
 
+
+function authorizeRole(requiredRoles) {
+  // console.log("requiredRoles", requiredRoles)
+  return async (req, res, next) => {
+    try {
+      const user = await getUserFromToken(req)
+      // console.log("...................authorizeRole() user:", user)
+      if (requiredRoles.includes(user.role)) {
+        next()
+      } else {
+        res.status(401).redirect("/identify")
+      }
+    }
+    catch (error) {
+      console.log(error)
+      res.status(401).redirect("/identify")
+    }
+  }
+}
+
+
+function authorizeToken(req, res, next) {
+  const token = req.cookies.jwt
+  if (!token) {
+    // 401 - unauthorized
+    return res.status(401).redirect("/identify");
+  }
+  try {
+    const decodedToken = jwt.verify(token, process.env.TOKEN_KEY);
+    req.user = decodedToken;
+    // console.log("req.user", req.user)
+    // console.log("AUTHORIZING TOKEN")
+    next();
+  } catch (error) {
+    console.log(error);
+    // 403 - forbidden
+    return res.status(403).redirect("/identify");
+  }
+}
