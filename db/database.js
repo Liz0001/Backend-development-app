@@ -1,7 +1,6 @@
 const sqlite3 = require("sqlite3").verbose()
 const file = "./db/users-database.db"
 const db = new sqlite3.Database(file)
-let nextId = generateId()
 
 
 // for admin to see users in database
@@ -15,6 +14,19 @@ function getAllUsers() {
   })
 }
 
+
+// for the teacher
+function getAllStudents() {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT * FROM users WHERE role LIKE ?`
+    db.all(sql, ["student" + '%'], (error, result) => {
+      if (error) reject(error)
+      else resolve(result)
+    })
+  })
+}
+
+
 // for login and for create account
 async function userExists(user) {
   const sql = `SELECT * FROM users WHERE name=?`
@@ -27,7 +39,8 @@ async function userExists(user) {
   })
 }
 
-// for login, get the user
+
+// for login, get the user of the session
 async function getUser(user) {
   const sql = `SELECT * FROM users WHERE name=?`
 
@@ -56,6 +69,7 @@ async function createUser(id, user, role, pass) {
   })
 }
 
+
 // generate id for new user
 async function generateId() {
   let nr = await getAllUsers()
@@ -64,4 +78,4 @@ async function generateId() {
 }
 
 
-module.exports = { getAllUsers, userExists, createUser, generateId, getUser }
+module.exports = { getAllUsers, userExists, createUser, generateId, getUser, getAllStudents }

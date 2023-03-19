@@ -1,11 +1,12 @@
-<!DOCTYPE html>
 <html>
 
 <head>
-  <title>Student Page</title>
+  <title>Profile Page</title>
 </head>
 
 <body>
+
+
   <div style="width: 500px; margin: 0 auto; text-align:center">
 
     <header>
@@ -15,11 +16,21 @@
     </header>
 
     <main>
-      <h3>Student Home Page</h3>
+      <h2>Hey <%= name %>!</h2>
+      <p>
+        Nice to see you!
+      </p>
 
-      <p>Welcome, Student!</p>
-
-
+      <br>
+      <h3>This your profile!</h3>
+      <p>
+        <a href="/start">Go to start page!</a>
+      </p>
+      <p>
+        <a href="/<%= role %>">
+          Go to <%= role %> page!
+        </a>
+      </p>
       <hr>
       <div>
         <form action="/logout" method="POST">

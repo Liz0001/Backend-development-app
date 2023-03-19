@@ -6,7 +6,8 @@ const { getAllUsers,
   userExists,
   createUser,
   generateId,
-  getUser } = require("./db/database.js")
+  getUser,
+  getAllStudents } = require("./db/database.js")
 
 const cookieParser = require("cookie-parser")
 const express = require("express")
@@ -58,27 +59,21 @@ app.get("/start", authorizeToken, (req, res) => {
 
 
 app.get("/student1", authorizeToken, authorizeRole(["student1", "teacher", "admin"]), async (req, res) => {
-  // const user = await getUserFromToken(req)
   res.render("student1.ejs")
-  // , { user: user })
 })
 
 app.get("/student2", authorizeToken, authorizeRole(["student2", "teacher", "admin"]), async (req, res) => {
-  const user = await getUserFromToken(req)
   res.render("student2.ejs")
-  // , { user: user })
 })
 
 app.get("/teacher", authorizeToken, authorizeRole(["teacher", "admin"]), async (req, res) => {
-  // const students = await getAllStudents()
-  res.render("teacher.ejs")
-  // , students)
+  const users = await getAllStudents()
+  res.render("teacher.ejs", { users: users })
 })
 
 app.get("/student", authorizeToken, authorizeRole(["student", "teacher", "admin"]), async (req, res) => {
   res.render("student.ejs")
 })
-
 
 app.get("/admin", authorizeToken, authorizeRole(["admin"]), async (req, res) => {
   const users = await getAllUsers()
@@ -86,40 +81,26 @@ app.get("/admin", authorizeToken, authorizeRole(["admin"]), async (req, res) => 
 })
 
 
+app.get("/", authorizeToken, (req, res) => {
+  res.render("start.ejs")
+})
 
+
+
+// Dynamic route that responds to requests with the user's ID
 app.get("/users/:userID", authorizeToken, async (req, res) => {
   const token = req.cookies.jwt
   const decryptedToken = jwt.verify(token, process.env.TOKEN_KEY)
   let user = await getUser(decryptedToken.name)
   user = user[0]
-  console.log("req.params.userID", req.params.userID)
-  console.log("decryptedToken.userID", decryptedToken.userID)
 
   if (req.params.userID !== decryptedToken.userID) {
-    return res.sendStatus(401)
+    return res.status(401).redirect(`/users/${user.userID}`)
   }
 
-  if (user.role === "student1") {
-    res.redirect("student1.ejs")
-    // , { user: user })
-  } else if (user.role === "student2") {
-    res.render("student2.ejs", { user: user })
-  } else if (user.role === "teacher") {
-    // TODO: function
-    // let students = await getAllStudents()
-    res.render("teacher.ejs")
-    // , students)
-
-  } else if (user.role === "student") {
-    res.render("student.ejs")
-  }
-  else if (user.role === "admin") {
-    res.redirect("/admin")
-  }
-
+  res.render("profile.ejs", { name: user.name, role: user.role })
+  return
 })
-
-
 
 
 ///////////////////////////////////
@@ -180,7 +161,7 @@ app.post("/identify", async (req, res) => {
         res.cookie("jwt", token, { httpOnly: true, maxAge: 86400000 }).status(200)
 
         req.method = "GET"
-        res.redirect(`/users/${name}`)
+        res.redirect(`/users/${user.userID}`)
 
         return
 
@@ -201,11 +182,6 @@ app.post("/identify", async (req, res) => {
 
 ///////////////////////////////////
 // logout and all other routes
-
-app.get("/logout", (req, res) => {
-  res.clearCookie("jwt")
-  res.redirect("/identify")
-})
 
 app.post("/logout", (req, res) => {
   res.clearCookie("jwt");
@@ -234,17 +210,14 @@ async function getUserFromToken(req) {
   const decryptedToken = jwt.verify(token, process.env.TOKEN_KEY)
   let user = await getUser(decryptedToken.name)
   user = user[0]
-  // console.log("getUserFromToken", user)
   return user
 }
 
 
 function authorizeRole(requiredRoles) {
-  // console.log("requiredRoles", requiredRoles)
   return async (req, res, next) => {
     try {
       const user = await getUserFromToken(req)
-      // console.log("...................authorizeRole() user:", user)
       if (requiredRoles.includes(user.role)) {
         next()
       } else {

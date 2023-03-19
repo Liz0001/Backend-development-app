@@ -1,10 +1,67 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<title>Teacher Page</title>
 </head>
+
 <body>
-	<h1>Teacher Home Page</h1>
-	<p>Welcome, Teacher!</p>
+
+
+	<div style="width: 750px; margin: 0 auto; text-align:center">
+		<header>
+			<h1>MyApp</h1>
+			<br>
+			<hr>
+		</header>
+
+		<main>
+
+			<h2>Teacher Page</h2>
+			<br>
+			<table style=" width:100%; text-align:center;">
+				<thead>
+					<tr>
+						<th>User ID</th>
+						<th>Name</th>
+						<th>Role</th>
+						<th>Password</th>
+					</tr>
+				</thead>
+				<tbody>
+					<% users.forEach(function(user) { %>
+						<tr>
+							<td>
+								<%= user.userID %>
+							</td>
+							<td>
+								<%= user.name %>
+							</td>
+							<td>
+								<%= user.role %>
+							</td>
+							<td>
+								<%= user.password %>
+							</td>
+						</tr>
+						<% }); %>
+				</tbody>
+			</table>
+
+			<br>
+			<br>
+			<hr>
+			<div>
+				<form action="/logout" method="POST">
+					<p>
+						<button type="submit">Log Out</button>
+					</p>
+				</form>
+			</div>
+		</main>
+	</div>
+
+
 </body>
+
 </html>
