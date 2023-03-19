@@ -27,10 +27,10 @@ app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`, req.body)
-  next()
-})
+// app.use((req, res, next) => {
+//   console.log(`${req.method} ${req.url}`, req.body)
+//   next()
+// })
 
 
 ///////////////////////////////////
@@ -142,13 +142,10 @@ app.post("/identify", async (req, res) => {
   let userInDB = await userExists(name)
 
   const encryptedPwd = await bcrypt.hash(password, 10)
-  console.log(encryptedPwd)
-  console.log(name, password, 'exist in db ', userInDB)
 
   if (userInDB) {
     let user = await getUser(name)
     user = user[0]
-    console.log(await bcrypt.compare(password, user.password))
     try {
       if (await bcrypt.compare(password, user.password)) {
 
@@ -197,7 +194,7 @@ app.all("*", (req, res) => { res.status(404).render("error.ejs") })
 ///////////////////////////////////
 // Server listening
 app.listen(process.env.PORT, async () => {
-  // databaseSetup()
+  databaseSetup()
   console.log("Server listening on PORT " + process.env.PORT)
 })
 
